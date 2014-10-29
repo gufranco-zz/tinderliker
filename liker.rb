@@ -19,36 +19,36 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-require 'faraday'
-require 'faraday_middleware'
-require 'json'
+require "faraday"
+require "faraday_middleware"
+require "json"
 
-FACEBOOK_ID = ENV['FACEBOOK_ID']
-FACEBOOK_TOKEN = ENV['FACEBOOK_TOKEN']
+FACEBOOK_ID = ENV["FACEBOOK_ID"]
+FACEBOOK_TOKEN = ENV["FACEBOOK_TOKEN"]
 
 # Connection
-connection = Faraday.new(url: 'https://api.gotinder.com') do |faraday|
+connection = Faraday.new(url: "https://api.gotinder.com") do |faraday|
   faraday.request :json
   faraday.adapter Faraday.default_adapter
 end
-connection.headers['User-Agent'] = 'Tinder/4.0.4 (iPhone; iOS 7.1.1; Scale/2.00)'
+connection.headers["User-Agent"] = "Tinder/4.0.4 (iPhone; iOS 7.1.1; Scale/2.00)"
 
 # Authentication
-authentication_response = connection.post '/auth', {facebook_token: FACEBOOK_TOKEN, facebook_id: FACEBOOK_ID}
+authentication_response = connection.post "/auth", {facebook_token: FACEBOOK_TOKEN, facebook_id: FACEBOOK_ID}
 authentication_response = JSON.parse(authentication_response.body)
-connection.token_auth(authentication_response['token'])
-connection.headers['X-Auth-Token'] = authentication_response['token']
+connection.token_auth(authentication_response["token"])
+connection.headers["X-Auth-Token"] = authentication_response["token"]
 
 # Like
 loop do
-  user_list = connection.post '/user/recs'
+  user_list = connection.post "/user/recs"
   user_list = JSON.parse(user_list.body)
   if !user_list.nil?
     pool = []
-    user_list['results'].each do |user|
+    user_list["results"].each do |user|
       pool << Thread.new {
-        connection.get '/get/' + user['_id']
-        puts user['_id']
+        connection.get "/get/#{user["_id"]}"
+        puts user["_id"]
       }
     end
     pool.each(&:join)
